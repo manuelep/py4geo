@@ -37,41 +37,44 @@ overwrite few basic setting variables.
 
 1. Define in your application settings subsequent variables with values adapted to your needs:
 
-        ::python
-        # db settings
-        # WARNING! Commented out variables are optional.
-        # DB_FOLDER =
-        DB_URI = "postgres://<PG user>:<password>@<host name>/<db name>"
-        # DB_POOL_SIZE = 10
-        # DB_MIGRATE = True # Actually True is the default if not specified.
-        # MATERIALIZED_VIEWS = []
+    ```python
+    # db settings
+    # WARNING! Commented out variables are optional.
+    # DB_FOLDER =
+    DB_URI = "postgres://<PG user>:<password>@<host name>/<db name>"
+    # DB_POOL_SIZE = 10
+    # DB_MIGRATE = True # Actually True is the default if not specified.
+    # MATERIALIZED_VIEWS = []
+    ```
 
 2. Create your own setup script (`setup.py`) in the `root` of your application:
 
-        ::python
-        from . import settings
-        from py4geo import settings as py4geo_settings
+    ```python
+    from . import settings
+    from py4geo import settings as py4geo_settings
 
-        py4geo_settings.DB_URI = settings.DB_URI
-        py4geo_settings.DB_FOLDER = settings.DB_FOLDER
-        py4geo_settings.MATERIALIZED_VIEWS = settings.MATERIALIZED_VIEWS
+    py4geo_settings.DB_URI = settings.DB_URI
+    py4geo_settings.DB_FOLDER = settings.DB_FOLDER
+    py4geo_settings.MATERIALIZED_VIEWS = settings.MATERIALIZED_VIEWS
 
-        from py4geo.setup import initdb
+    from py4geo.setup import initdb
 
-        initdb()
+    initdb()
 
-        # WARNING! These imports must follow the call of the previous initdb function.
-        from py4geo.setup.setup import modelsetup
-        # Importing the model defined tables are automatically created
-        from py4geo.models import db
-        # This will create necessary geometry views.
-        modelsetup()
+    # WARNING! These imports must follow the call of the previous initdb function.
+    from py4geo.setup.setup import modelsetup
+    # Importing the model defined tables are automatically created
+    from py4geo.models import db
+    # This will create necessary geometry views.
+    modelsetup()
+    ```
 
 3. Go to your `apps` folder and run:
 
-        ::bash
-        cd path/to/apps
-        python -m <yourAppName>.setup
+    ```bash
+    cd path/to/apps
+    python -m <yourAppName>.setup
+    ```
 
 > **WARNING**
 > the script will ask for necessary PostgreSQL power user credentials that you
