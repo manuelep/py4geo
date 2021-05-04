@@ -5,19 +5,19 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="py4geo",
-    version="1.0.0",
+    version="1.0.1",
     author="Manuele Pesenti",
     author_email="manuele@inventati.org",
     description="A small example package",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    # url="https://github.com/pypa/sampleproject",
-    # project_urls={
-    #     "Bug Tracker": "https://github.com/pypa/sampleproject/issues",
-    # },
+    url="https://github.com/manuelep/py4vtile",
+    project_urls={
+        "Bug Tracker": "https://github.com/manuelep/py4vtile/issues",
+    },
     classifiers=[
         "Programming Language :: Python :: 3",
-        # "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
     ],
     package_dir={"": "src"},

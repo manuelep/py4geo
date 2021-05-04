@@ -29,8 +29,4 @@ MATERIALIZED_VIEWS = []
 
 PATHROOT = 'planet'
 
-# try import private settings
-# try:
-#     from .settings_private import *
-# except (ImportError, ModuleNotFoundError):
-#     pass
+IS_H3_INSTALLED = False

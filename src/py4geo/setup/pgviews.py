@@ -3,6 +3,9 @@
 from .sql import geoviews as views
 from .. import settings
 
+class BreakDatabaseIo(Exception):
+    """ """
+
 class Sqler(object):
     """docstring for Sqler."""
 
@@ -19,15 +22,21 @@ class Sqler(object):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.db.commit()
+        if traceback:
+            self.db.rollback()
+            if isinstance(exc_value, BreakDatabaseIo):
+                return True
+        else:
+            self.db.commit()
+
+    def break_io(self, message=None):
+        raise BreakDatabaseIo(message)
 
     def init_view(self, name, query, materialized=False):
         MATERIALIZED = ' MATERIALIZED' if materialized else ''
-        _query = """
-        DROP VIEW IF EXISTS {name} CASCADE;
-        DROP{MATERIALIZED} VIEW IF EXISTS {name} CASCADE;
-        CREATE{MATERIALIZED} VIEW {name} AS {query}
-        """
+        _query = "DROP{MATERIALIZED} VIEW IF EXISTS {name} CASCADE;\n" if materialized else "DROP VIEW IF EXISTS {name} CASCADE;n"
+        _query += "CREATE{MATERIALIZED} VIEW {name} AS {query}"
+
         return self(_query.format(**vars()))
 
 def setup():
