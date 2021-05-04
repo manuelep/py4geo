@@ -92,4 +92,5 @@ to a PostGIS database.
 
 ## Resources
 
-* https://github.com/manuelep/py4geo/wiki
+* [Project](https://pypi.org/project/py4geo)
+* [Wiki](https://github.com/manuelep/py4geo/wiki)
