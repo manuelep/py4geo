@@ -4,6 +4,7 @@
 import mercantile as mc
 from math import modf
 import pyproj
+import geojson
 
 BASE_DIM = 155
 
@@ -37,6 +38,16 @@ class Bbox(object):
     def osm(self):
         keys = ('w', 's', 'e', 'n')
         return dict(zip(keys, map(str, (self.minx, self.miny, self.maxx, self.maxy,)))) # minx, miny, maxx, maxy
+
+    @property
+    def as_gj_polygon(self):
+        return geojson.Polygon([[
+            (self.minx,self.maxy,),
+            (self.maxx,self.maxy,),
+            (self.maxx,self.miny,),
+            (self.minx,self.miny,),
+            (self.minx,self.maxy,),
+        ]])
 
     def __repr__(self):
         return str(self.osm)

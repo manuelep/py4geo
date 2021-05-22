@@ -3,12 +3,17 @@
 from ..common import logger
 from .optutils.base import Turbo
 from . import io
+import json
+import osm2geojson
+from ..tools.tile import Bbox
 # from .tile import boxtiles
 
-import mercantile as mc
 from tqdm import tqdm
 from sys import stdout, getsizeof #, _getframe
 from mptools.dataformat import smartbytes
+import geojson
+from supermercado.burntiles import burn
+import mercantile
 
 T = lambda s: s
 
@@ -87,7 +92,7 @@ def fetch_and_log_from_osm(query, pgcopy=False):
     # plugins.planet.logger.info(query)
 
     turbo = Turbo()
-    data = turbo(query)
+    data = turbo(query.encode())
 
     nodes = list(tqdm(
         data.nodes,
@@ -129,11 +134,11 @@ def fetch_and_log_from_osm(query, pgcopy=False):
 
 class Syncher(object):
     """docstring for Syncher."""
-    def __init__(self, xtile, ytile, zoom, uri=None):
+    def __init__(self, xtile, ytile, zoom, uri=None, query=None, gtypes=['node', 'way', 'relation']):
         super(Syncher, self).__init__()
         self.uri = uri or get_uri(xtile, ytile, zoom)
         self.tile = {'x': xtile, 'y': ytile, 'z': zoom}
-        tile_bounds = mc.bounds(mc.quadkey_to_tile(mc.quadkey(xtile, ytile, zoom)))
+        tile_bounds = mercantile.bounds(mercantile.quadkey_to_tile(mercantile.quadkey(xtile, ytile, zoom)))
         keys = ('w', 's', 'e', 'n',)
         self.bbox = dict(zip(keys, map(str, (
             tile_bounds.west,
@@ -142,13 +147,16 @@ class Syncher(object):
             tile_bounds.north,
         )))) # minx, miny, maxx, maxy
 
+        if query is None:
+            query = [[{"k": "qwertyuiop", "modv": "not", "regv": "."}]]
+
         self.base_query = {
-            'query': [[{"k": "qwertyuiop", "modv": "not", "regv": "."}]],
+            'query': query,
             'bbox': self.bbox,
             'gtypes': ['node', 'way', 'relation'],
         }
 
-    def __call__(self, newer_than=None):
+    def __call__(self, newer_than=None, pgcopy=False):
         """
         newer_than @datetime : Last update timestamp
         """
@@ -161,5 +169,82 @@ class Syncher(object):
 
         fetch_and_log_from_osm(
             Turbo.build_query(lambda: [_query]),
-            # pgcopy = pgcopy and not update
+            pgcopy = pgcopy
         )
+
+def get_polys(featureCollection):
+    for feature in featureCollection['features']:
+        if feature['geometry']['type'] == 'MultiPolygon':
+            for poly in feature['geometry']['coordinates']:
+                xfeature = { "type": "Feature", "properties": {}, "geometry": { "type": "Polygon" } }
+                xfeature['geometry']['coordinates'] = poly
+                yield xfeature
+        elif feature['geometry']['type'] == 'Polygon':
+            yield feature
+
+def tile2poly(xyz):
+    x, y, z = xyz
+    bounds = mercantile.bounds(x, y, z)
+    bbox = Bbox(bounds.west, bounds.south, bounds.east, bounds.north)
+    poly = bbox.as_gj_polygon
+    return poly
+
+class OsmShell(object):
+    """ Downloads custom data from OSM inside administrative boundary geometry """
+
+    @staticmethod
+    def __boundary_filter(*args, **kw):
+        def main():
+            query = [
+                {"k": k, "v": "{}".format(v)} \
+            for k,v in kw.items()]+list(args)
+
+            yield {
+                # "bbox": Bbox(minlon, minlat, maxlon, maxlat).osm,
+                "query": [query],
+                "gtypes": ['relation']
+            }
+        return main
+
+    def __init__(self, name, admin_level=8, zoom=14):
+        """
+        name         @string : Boiundary name (e.g. Genova, Milano, etc.)
+        admin_level @integer : Please refer to https://wiki.openstreetmap.org/wiki/Key:admin_level
+            (e.g. 8 Comune or 6 Provincia)
+        zoom        @integer : Dimension of tiles used for pixelating the boundary
+        """
+        super(OsmShell, self).__init__()
+        query = Turbo.build_query(self.__boundary_filter(
+            {"k": "wikipedia", "regv": "it:"},
+            boundary = "administrative",
+            admin_level = admin_level,
+            name = name
+        ))
+
+        turbo = Turbo()
+        data_, _ = turbo.__raw_call__(query.encode())
+        data = json.loads(data_)
+        fc = osm2geojson.json2geojson(data)
+
+        polys = list(get_polys(fc))
+
+        assert len(polys)>0
+
+        self.tiles = burn(polys, zoom)
+
+    @property
+    def tileCollection(self):
+        """ """
+        return geojson.FeatureCollection(list(map(
+            lambda gg: geojson.Feature(geometry=gg),
+            map(tile2poly, self.tiles)
+        )))
+
+    def __call__(self, query=None):
+        if query is None:
+            # Generic query for downloading everything
+            query = [[{"k": "qwertyuiop", "modv": "not", "regv": "."},],]
+
+        for tile in tqdm(self.tiles):
+            dbsyncher = Syncher(*tile, query=query)
+            dbsyncher()

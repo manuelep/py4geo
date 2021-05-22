@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 
+SOURCES = """SELECT DISTINCT ON (info.source_name)
+    info.id,
+    info.source_name as name
+FROM info
+ORDER BY info.source_name ASC, info.id ASC
+"""
+
 ADDRESSES = """
 SELECT DISTINCT ON (info.tags->>'addr:street')
     info.id as id,
@@ -29,6 +36,7 @@ POINTS = """
 SELECT
     info.id AS id,
     info.source_name as source_name,
+    sources.id as src_id,
     node.geom as geom,
     info.source_id as source_id,
     info.tags as tags,
@@ -37,8 +45,10 @@ SELECT
     node.id as node_id
 FROM
     info,
-    node
+    node,
+    sources
 WHERE
+    sources.name=info.source_name AND
     node.info_id=info.id AND
     ((info.tags IS NOT NULL) OR (info.properties IS NOT NULL))
 """
@@ -51,18 +61,21 @@ SELECT
     ST_IsClosed(ST_MakeLine(node.geom ORDER BY way_node.sorting)) as is_closed,
     count(node.id) as length,
     info.source_name,
+    sources.id as src_id,
     info.source_id as source_id,
     info.tags as tags,
     info.properties as properties
 FROM
     info,
     node,
-    way_node
+    way_node,
+    sources
 WHERE
+    sources.name=info.source_name AND
     way_node.info_id=info.id AND
     way_node.node_id=node.id
 GROUP BY
-    info.id
+    info.id, sources.id
 """
 
 GRAPH = """
@@ -70,6 +83,7 @@ SELECT
     -- start_node.id as id,
     format('%s-%s', start_node.id, end_node.id) as id,
     way_info.source_name,
+    sources.id as src_id,
     way_info.source_id,
     ST_MakeLine(ARRAY[start_node.geom, end_node.geom]) as geom,
     start_info.id as sinfo_id,
@@ -90,8 +104,10 @@ FROM
     node as start_node,
     node as end_node,
     way_node as start_way,
-    way_node as end_way
+    way_node as end_way,
+    sources
 WHERE
+    sources.name=way_info.source_name AND
     way_info.id = start_way.info_id AND
     start_info.id = start_node.info_id AND
     end_info.id = end_node.info_id AND
@@ -113,6 +129,7 @@ SELECT
     node.geom as node,
     way_node.sorting as sorting,
     relinfo.source_name AS source_name,
+    sources.id as src_id,
     relinfo.tags AS tags,
     relinfo.properties AS properties,
     relinfo.source_id AS source_id,
@@ -123,8 +140,10 @@ FROM
     info as wayinfo,
     node,
     way_node,
-    relation
+    relation,
+    sources
 WHERE
+    sources.name=relinfo.source_name AND
     node.id = way_node.node_id AND
     relation.info_id = relinfo.id AND
     way_node.info_id=wayinfo.id AND
@@ -140,6 +159,7 @@ SELECT
     centroid,
     trunc(ST_Area(ST_Transform(ST_MakePolygon(geom), 3857))::numeric, 2) as area,
 	source_name,
+    src_id,
 	source_id,
 	tags::jsonb,
 	properties::jsonb
@@ -162,13 +182,14 @@ SELECT
     ST_IsClosed((ST_Dump(ST_LineMerge(ST_Union(segment_points.geom order by segment_points.rel_id)))).geom) as is_closed,
     sum(segment_points.length) as length,
     segment_points.source_name,
+    segment_points.src_id,
     segment_points.tags::jsonb,
     segment_points.properties::jsonb,
     segment_points.source_id
 FROM segment_points
 WHERE 'outer' = ANY(all_roles)
 GROUP BY
-    segment_points.rel_id, segment_points.source_name, segment_points.source_id,
+    segment_points.rel_id, segment_points.source_name, segment_points.src_id, segment_points.source_id,
     segment_points.tags::jsonb, segment_points.properties::jsonb
 """
 
@@ -180,6 +201,7 @@ SELECT
     ST_Centroid(geom) as centroid,
     trunc(ST_Area(ST_Transform(ST_MakePolygon(geom), 3857))::numeric, 2) as area,
     source_name,
+    src_id,
     source_id,
     tags,
     properties

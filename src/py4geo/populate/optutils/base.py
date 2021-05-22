@@ -17,6 +17,8 @@ from io import BytesIO
 from .geom import Bbox, BASE_AREA_DIMENSION
 from ...tools.tile import BASE_DIM, tilebbox
 
+PY2 = False
+
 class MaxRetriesReached(overpy.exception.OverPyException):
     """ Courtesy of: https://github.com/DinoTools/python-overpy/blob/31c6e689c0d49d6617e020597914f47a0bc98f04/overpy/exception.py#L40
     Raised if max retries reached and the Overpass server didn't respond with a result.
@@ -131,6 +133,8 @@ class Turbo(object):
 
         raise overpy.exception.MaxRetriesReached(retry_count=retry_num, exceptions=retry_exceptions)
 
+    raw_call = __raw_call__
+
     def __fake_call__(self, query, *args, **kw):
         """ Caches responses for DEBUG purposes only """
 
@@ -216,7 +220,7 @@ class Turbo(object):
 
         qconditions = [{
             "query": [[{"k": ..., "modv": ..., "v/regv": ...}, ...], ...],
-            "distance": 0,
+            "bbox": ...,
             "gtypes": [...], # Optional. Possible values: "node", "way", "relation"
             # "amplitude": 0,
             "newer": "%Y-%m-%ddT%H:%M:%SZ" #
@@ -251,7 +255,7 @@ class Turbo(object):
             "relation": ["down"]
         }
 
-        def _append(gtype, query, bbox, newer_than=None):
+        def _append(gtype, query, bbox=None, newer_than=None):
             for _union in query:
                 Query = etree.SubElement(Union, "query", into="_", type=gtype)
                 for _intersection in _union:
@@ -260,7 +264,8 @@ class Turbo(object):
                     etree.SubElement(Query, "newer", than=newer_than)
                 for recurse_type in _recurse.get(gtype, []):
                     etree.SubElement(Union, "recurse", into="_", type=recurse_type, **{"from": "_"})
-                etree.SubElement(Query, "bbox-query", **bbox)
+                if not bbox is None:
+                    etree.SubElement(Query, "bbox-query", **bbox)
 
         for cond in qconditions():
             try:

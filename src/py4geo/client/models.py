@@ -48,7 +48,7 @@ db.define_table("points",
 )
 
 polyssfields = lambda *of: (
-    # Field("src_id"),
+    Field("src_id"),
     Field("source_name"),
     Field("source_id"),
     Field("geom", "geometry()"),
@@ -86,7 +86,7 @@ db.define_table("polys",
 # )
 
 db.define_table("graph",
-    # Field("src_id"),
+    Field("src_id"),
     Field("source_id", readable=False),
     Field("source_name"),
     Field("geom", "geometry()", readable=False),

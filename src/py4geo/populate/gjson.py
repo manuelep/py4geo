@@ -70,7 +70,7 @@ class NodeParser(BaseParser, __CommonMethods__):
               "tags": {"<tag name>": <tag value>} # OPTIONAL NON GEOJSON STANDARD
             }
         """
-        for feature in tqdm(features):
+        for feature in tqdm(features, desc="Parsing features"):
             info_id = self.parse_feature(feature, merge=merge)
 
     parse = parse_features

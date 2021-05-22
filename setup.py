@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="py4geo",
-    version="1.0.1",
+    version="1.0.2",
     author="Manuele Pesenti",
     author_email="manuele@inventati.org",
     description="A small example package",
@@ -36,6 +36,8 @@ setuptools.setup(
         "tqdm",
         "geomet",
         "h3",
-        "py4vtile"
+        "py4vtile",
+        "supermercado",
+        "osm2geojson"
     ]
 )

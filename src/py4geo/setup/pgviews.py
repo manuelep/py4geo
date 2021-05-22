@@ -3,6 +3,16 @@
 from .sql import geoviews as views
 from .. import settings
 
+# import psycopg2.errors
+
+DEFAULT_MATERIALIZED_VIEWS = [
+    'sources',
+    'segment_points',
+    'spolys',
+    'rpolys',
+    'polys'
+]
+
 class BreakDatabaseIo(Exception):
     """ """
 
@@ -34,10 +44,16 @@ class Sqler(object):
 
     def init_view(self, name, query, materialized=False):
         MATERIALIZED = ' MATERIALIZED' if materialized else ''
-        _query = "DROP{MATERIALIZED} VIEW IF EXISTS {name} CASCADE;\n" if materialized else "DROP VIEW IF EXISTS {name} CASCADE;n"
+        _query = "DROP{MATERIALIZED} VIEW IF EXISTS {name} CASCADE;\n" if materialized else "DROP VIEW IF EXISTS {name} CASCADE;\n"
         _query += "CREATE{MATERIALIZED} VIEW {name} AS {query}"
 
         return self(_query.format(**vars()))
+
+
+    def refresh_views(self):
+        query = '; '.join(map(lambda vv: f"REFRESH MATERIALIZED VIEW {vv};", DEFAULT_MATERIALIZED_VIEWS))
+        return self(query)
+
 
 def setup():
 
@@ -57,6 +73,8 @@ def setup():
         ALTER SEQUENCE rpathseq RESTART WITH 1;
         """)
 
+        sqler.init_view('sources', views.SOURCES, materialized=('sources' in DEFAULT_MATERIALIZED_VIEWS))
+
         sqler.init_view('addresses', views.ADDRESSES, materialized=("addresses" in settings.MATERIALIZED_VIEWS))
 
         sqler.init_view('housenumbers', views.HOUSENUMBERS, materialized=("housenumbers" in settings.MATERIALIZED_VIEWS))
@@ -67,15 +85,25 @@ def setup():
 
         sqler.init_view('graph', views.GRAPH, materialized=("graph" in settings.MATERIALIZED_VIEWS))
 
-        sqler.init_view('segment_points', views.SPLITTEDSEGMENTSNODES, materialized=True)
+        sqler.init_view('segment_points', views.SPLITTEDSEGMENTSNODES,
+            materialized = ('segment_points' in DEFAULT_MATERIALIZED_VIEWS)
+        )
 
-        sqler.init_view('spolys', views.SIMPLEPOLYGONS, materialized=True)
+        sqler.init_view('spolys', views.SIMPLEPOLYGONS,
+            materialized = ('spolys' in DEFAULT_MATERIALIZED_VIEWS)
+        )
 
-        sqler.init_view('rpath', views.REBUILDEDPOLYGONPATHS, materialized=True)
+        sqler.init_view('rpath', views.REBUILDEDPOLYGONPATHS,
+            materialized = ('rpath' in DEFAULT_MATERIALIZED_VIEWS)
+        )
 
-        sqler.init_view('rpolys', views.REBUILDEDPOLYGONS(rpath='rpath'),  materialized=True)
+        sqler.init_view('rpolys', views.REBUILDEDPOLYGONS(rpath='rpath'),
+            materialized = ('rpolys' in DEFAULT_MATERIALIZED_VIEWS)
+        )
 
-        sqler.init_view('polys', views.POLYS(spolys='spolys'), materialized=True)
+        sqler.init_view('polys', views.POLYS(spolys='spolys'),
+            materialized = ('polys' in DEFAULT_MATERIALIZED_VIEWS)
+        )
 
     return
 

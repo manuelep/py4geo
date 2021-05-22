@@ -114,4 +114,4 @@ def geomdbset(tab, minlon=None, minlat=None, maxlon=None, maxlat=None,
             ])+")"
 
     # logger.debug(db(basequery)._select())
-    return db(basequery)
+    return tab._db(basequery)

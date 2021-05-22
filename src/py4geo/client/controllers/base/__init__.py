@@ -3,9 +3,11 @@
 from py4web import action #, request, abort, redirect, URL, HTTP
 from mptools.frameworks.py4web.controller import LocalsOnly
 
-from .... impoert settings
+from .... import settings
 from ...common import webWrapper
-from .callbaks import fetch_, fetcharound_, guess_street_
+from .callbacks import fetch as fetch_
+from .callbacks import guess_street as guess_street_
+from .callbacks import fetcharound as fetcharound_
 
 # WARNING!
 # Subsequent controller are available from localhost only

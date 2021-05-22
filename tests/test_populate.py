@@ -37,7 +37,6 @@ class PopulateTestCase(unittest.TestCase):
         db.commit()
 
     def tearDown(self):
-        import pdb; pdb.set_trace()
         self.dbwiz.destroy()
 
 if __name__ == '__main__':

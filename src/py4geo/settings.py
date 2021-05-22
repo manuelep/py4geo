@@ -2,16 +2,17 @@
 
 import os
 from pathlib import Path
+from py4web.core import required_folder
 from . import __name__ as PACKAGENAME
 
 HOME = str(Path.home())
 
 # db settings
-APP_FOLDER = HOME
+APP_FOLDER = os.path.join(HOME, PACKAGENAME)
 
 # DB_FOLDER:    Sets the place where migration files will be created
 #               and is the store location for SQLite databases
-DB_FOLDER = os.path.join(APP_FOLDER, "databases")
+DB_FOLDER = required_folder(APP_FOLDER, "databases")
 DB_URI = None
 DB_POOL_SIZE = 10
 DB_MIGRATE = True

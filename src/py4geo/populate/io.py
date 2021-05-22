@@ -14,6 +14,17 @@ except ImportError:
 
 from tqdm import tqdm
 
+from ..setup.pgviews import Sqler
+
+def refresh(func):
+    def wrapper(*args, **kwargs):
+        res = func(*args, **kwargs)
+        with Sqler() as sqler:
+            sqler.refresh_views()
+        return res
+    return wrapper
+
+@refresh
 def feat(feature, source_name='__GENERIC__', copy=False, **kw):
     data = jsloads(feature) if isinstance(feature, str) else feature
     if not copy:
@@ -40,6 +51,7 @@ def feat(feature, source_name='__GENERIC__', copy=False, **kw):
             NotImplementedError()
     raise NotImplementedError()
 
+@refresh
 def json(collection, source_name='__GENERIC__', copy=False, commit=True, **kw):
     data = jsloads(collection) if isinstance(collection, str) else collection
     grouping = lambda feat: feat['geometry']['type']
@@ -67,6 +79,7 @@ def json(collection, source_name='__GENERIC__', copy=False, commit=True, **kw):
 
 geojson = json
 
+@refresh
 def osm(nodes, ways, relations, copy=True, **kw):
 
     if copy:
@@ -125,6 +138,7 @@ def osm(nodes, ways, relations, copy=True, **kw):
             relations = relations
         )
 
+@refresh
 def idealista(cls, elementList, copy=False):
     def to_geojson():
         """ """
