@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="py4geo",
-    version="1.0.3",
+    version="1.0.5b",
     author="Manuele Pesenti",
     author_email="manuele@inventati.org",
     description="A small example package",
@@ -22,9 +22,9 @@ setuptools.setup(
     ],
     package_dir={"": "src"},
     packages=setuptools.find_packages(where="src"),
+    package_data={"": ['*.sql', '*.md']},
     python_requires=">=3.6",
     install_requires=[
-        "mptools",
         "overpy",
         "shapely",
         "ujson",
@@ -36,6 +36,7 @@ setuptools.setup(
         "tqdm",
         "geomet",
         "h3",
+        "mptools>=1.0.7",
         "py4vtile",
         "supermercado",
         "osm2geojson"
