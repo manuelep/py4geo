@@ -184,7 +184,7 @@ class Turbo(object):
             response = self.__cache__[querychecksum]["response"]
             assert not response is None, "This should never happen, why it happens?"
         except (KeyError, AssertionError,):
-            for t in range(1, 4):
+            for t in range(1, 5):
                 try:
                     response = self.api.query(query, *args, **kw) #.nodes
                     assert not response is None, "This should never happen, why it happens?"
@@ -192,16 +192,19 @@ class Turbo(object):
                     overpy.exception.OverpassTooManyRequests,
                     overpy.exception.OverpassGatewayTimeout,
                     AssertionError,
-                ):
-                    sleep(t*overpy.Overpass.retry_timeout)
-                    continue
+                ) as err:
+                    if t==5:
+                        raise
+                    else:
+                        sleep(t*overpy.Overpass.retry_timeout)
+                        continue
                 else:
                     self.__cache__[querychecksum] = {
                         "response": response,
                         "query": query
                     }
                     return self.__cache__[querychecksum]["response"]
-            raise
+
         else:
             return response # self.__cache__[querychecksum]["response"]
 

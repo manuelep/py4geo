@@ -27,6 +27,7 @@ class BaselTileViewsModel(Sqler):
             tilename_ = f"T_tilename({tile_})"
             # polygon_ = f"T_bounds({tile_})"
             self.get_poly_method = f"T_bounds({self.GEOM_VIEW}.tile)"
+            self.get_area_method = f"ST_Area(ST_Transform({get_poly_method}, 3857))"
 
             # tilename_ = f"tilename(points.geom, {resolution})"
             # polygon_ = f"bounds_for_tile_indices(ST_Y(tile_indices_for_lonlat(points.geom, {resolution})), ST_X(tile_indices_for_lonlat(points.geom, {resolution})), {resolution})"
@@ -35,6 +36,7 @@ class BaselTileViewsModel(Sqler):
             tilename_ = tile_
             # polygon_ = f"h3_h3index_to_geoboundary(h3_geo_to_h3index(points.geom, {resolution}))"
             self.get_poly_method = f"h3_h3index_to_geoboundary({self.GEOM_VIEW}.tile)"
+            self.get_area_method = f"h3_hexagon_area_km2({resolution})"
 
         self.tile = f"{tile_} as tile"
         self.tilename = f"{tilename_} as tilename"

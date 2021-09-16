@@ -5,15 +5,15 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="py4geo",
-    version="1.0.6",
+    version="1.0.7",
     author="Manuele Pesenti",
     author_email="manuele@inventati.org",
-    description="A small example package",
+    description="My geo package",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/manuelep/py4vtile",
+    url="https://github.com/manuelep/py4geo",
     project_urls={
-        "Bug Tracker": "https://github.com/manuelep/py4vtile/issues",
+        "Bug Tracker": "https://github.com/manuelep/py4geo/issues",
     },
     classifiers=[
         "Programming Language :: Python :: 3",
