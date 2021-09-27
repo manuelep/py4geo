@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="py4geo",
-    version="1.0.7",
+    version="1.0.8",
     author="Manuele Pesenti",
     author_email="manuele@inventati.org",
     description="My geo package",
